@@ -28,8 +28,18 @@ public class Projectile3DController : MonoBehaviour
             //I push them in the direction I'm flying with a power equal to my Knockback stat
             rb.AddForce(RB.linearVelocity.normalized * Knockback, ForceMode.Impulse);
         }
+        
         //If I hit anything, I despawn
         
         Destroy(gameObject);
+    }
+
+    public void IgnoreOwner(Collider[] owner)
+    {
+        Collider bulletCol = GetComponent<Collider>();
+        foreach (Collider col in owner)
+        {
+            Physics.IgnoreCollision(bulletCol, col);
+        }
     }
 }   

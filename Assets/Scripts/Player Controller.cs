@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public Camera shoulder;
-    public GameObject gun;
+    public Camera shoulderCamera;
+    public GameObject gunMuzzle;
     public Rigidbody RB;
     public Projectile3DController ProjectilePrefab;
 
@@ -16,9 +16,18 @@ public class PlayerController : MonoBehaviour
 
     public List<GameObject> Floors;
 
+    public Transform cameraPivot;
+    public Vector3 cameraOffset = new Vector3(0.5f, 0f, -3);
+    public Vector3 aimCameraOffset = new Vector3(1.5f, 0f, -1.5f);
+    public float aimSpeed = 10f;
+    private bool isAiming = false;
+
+    float xRotation = 0f;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        shoulderCamera.transform.localRotation = Quaternion.identity;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         
@@ -29,27 +38,36 @@ public class PlayerController : MonoBehaviour
     {
         cameraMove();
         playerMove();
+        Shoot();
 
-        gun.transform.forward = shoulder.transform.forward;
-        gun.transform.rotation = shoulder.transform.rotation;
-        if (Input.GetMouseButtonDown(0))
-        {
-            
-            //Spawn a projectile right in front of my eyes
-            Instantiate(ProjectilePrefab, gun.transform.position + gun.transform.forward,
-                gun.transform.rotation);
-        }
+
+        
     }
 
     void cameraMove()
-    {
+    { 
         //If my mouse goes left/right my body moves left/right
-        float xRot = Input.GetAxis("Mouse X") * MouseSensitivity;
-        transform.Rotate(0, xRot, 0);
+        float mouseX = Input.GetAxis("Mouse X") * MouseSensitivity * Time.deltaTime;
+        float mouseY = -Input.GetAxis("Mouse Y") * MouseSensitivity * Time.deltaTime;
 
-        //If my mouse goes up/down my aim (but not body) go up/down
-        float yRot = -Input.GetAxis("Mouse Y") * MouseSensitivity;
-        shoulder.transform.Rotate(yRot, 0, 0);
+        transform.Rotate(0, mouseX, 0);
+
+        xRotation += mouseY;
+        xRotation = Mathf.Clamp(xRotation, -40, 60);
+
+        cameraPivot.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        //Apply camera offset(shoulder view)
+        
+        //Check aiming input
+        isAiming = Input.GetMouseButton(1); // Right mouse button for aiming
+
+        //Smoothly transition to aim camera offset
+        Vector3 targetOffset = isAiming ? aimCameraOffset : cameraOffset;
+        shoulderCamera.transform.localPosition = Vector3.Lerp(
+            shoulderCamera.transform.localPosition, 
+            targetOffset, 
+            Time.deltaTime * aimSpeed
+            );
     }
 
     void playerMove()
@@ -80,6 +98,25 @@ public class PlayerController : MonoBehaviour
             //Plug my calculated velocity into the rigidbody
             RB.linearVelocity = move;
         }
+    }
+
+    void Shoot()
+    {
+        gunMuzzle.transform.forward = shoulderCamera.transform.forward;
+        gunMuzzle.transform.rotation = shoulderCamera.transform.rotation;
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            GameObject bulletObj = Instantiate(
+                ProjectilePrefab.gameObject,
+                gunMuzzle.transform.position + gunMuzzle.transform.forward * 2f,
+                gunMuzzle.transform.rotation
+            );
+            Projectile3DController bullet = bulletObj.GetComponent<Projectile3DController>();
+            Collider[] playerColliders = GetComponentsInChildren<Collider>();
+            bullet.IgnoreOwner(playerColliders);
+        }
+        
     }
 
     public bool OnGround()
