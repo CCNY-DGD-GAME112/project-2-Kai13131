@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+
     public Camera shoulderCamera;
     public GameObject gunMuzzle;
     public Rigidbody RB;
@@ -30,7 +31,6 @@ public class PlayerController : MonoBehaviour
         shoulderCamera.transform.localRotation = Quaternion.identity;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        
     }
 
     // Update is called once per frame
@@ -39,9 +39,7 @@ public class PlayerController : MonoBehaviour
         cameraMove();
         playerMove();
         Shoot();
-
-
-        
+                      
     }
 
     void cameraMove()
@@ -52,7 +50,7 @@ public class PlayerController : MonoBehaviour
 
         transform.Rotate(0, mouseX, 0);
 
-        xRotation += mouseY;
+        xRotation += mouseY / 2;
         xRotation = Mathf.Clamp(xRotation, -40, 60);
 
         cameraPivot.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
