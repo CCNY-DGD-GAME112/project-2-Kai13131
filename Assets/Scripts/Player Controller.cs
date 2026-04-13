@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
 {
 
     public Camera shoulderCamera;
-    public GameObject gunMuzzle;
+    public GameObject arm_right;
     public Rigidbody RB;
     public Projectile3DController ProjectilePrefab;
 
@@ -25,6 +25,9 @@ public class PlayerController : MonoBehaviour
 
     float xRotation = 0f;
 
+    public AudioSource audioSource;
+    public AudioClip ShootSound;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -36,37 +39,52 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        cameraMove();
         playerMove();
+        cameraMove();
         Shoot();
                       
     }
 
     void cameraMove()
-    { 
+    {
+        
         //If my mouse goes left/right my body moves left/right
         float mouseX = Input.GetAxis("Mouse X") * MouseSensitivity * Time.deltaTime;
         float mouseY = -Input.GetAxis("Mouse Y") * MouseSensitivity * Time.deltaTime;
 
+        
+
         transform.Rotate(0, mouseX, 0);
 
-        xRotation += mouseY / 2;
-        xRotation = Mathf.Clamp(xRotation, -40, 60);
-
-        cameraPivot.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        //Apply camera offset(shoulder view)
+        xRotation += mouseY * MouseSensitivity * Time.deltaTime;
+        xRotation = Mathf.Clamp(xRotation, -30, 30);
         
+        cameraPivot.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        shoulderCamera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        arm_right.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        //Apply camera offset(shoulder view)
+
         //Check aiming input
         isAiming = Input.GetMouseButton(1); // Right mouse button for aiming
 
         //Smoothly transition to aim camera offset
-        Vector3 targetOffset = isAiming ? aimCameraOffset : cameraOffset;
+        Vector3 targetOffset;
+        if (isAiming)
+        {
+            targetOffset = aimCameraOffset;
+            arm_right.transform.localRotation = Quaternion.Euler(xRotation + 270, 0f, 0f);
+        }
+        else
+        {
+            targetOffset = cameraOffset;
+        }
         shoulderCamera.transform.localPosition = Vector3.Lerp(
             shoulderCamera.transform.localPosition, 
             targetOffset, 
             Time.deltaTime * aimSpeed
             );
     }
+
 
     void playerMove()
     {
@@ -100,19 +118,31 @@ public class PlayerController : MonoBehaviour
 
     void Shoot()
     {
-        gunMuzzle.transform.forward = shoulderCamera.transform.forward;
-        gunMuzzle.transform.rotation = shoulderCamera.transform.rotation;
-
+        
         if (Input.GetMouseButtonDown(0))
         {
+            audioSource.PlayOneShot(ShootSound);
+
+            Ray ray = new Ray(shoulderCamera.transform.position, shoulderCamera.transform.forward);
+            RaycastHit hit;
+            Vector3 targetPoint;
+
+            if (Physics.Raycast(ray, out hit, 100f))
+            {
+                targetPoint = hit.point;
+            }
+            else
+            {
+                targetPoint = ray.GetPoint(100f);
+            }
+
+            Vector3 direction = (targetPoint - shoulderCamera.transform.position).normalized;
+
             GameObject bulletObj = Instantiate(
                 ProjectilePrefab.gameObject,
-                gunMuzzle.transform.position + gunMuzzle.transform.forward * 2f,
-                gunMuzzle.transform.rotation
-            );
-            Projectile3DController bullet = bulletObj.GetComponent<Projectile3DController>();
-            Collider[] playerColliders = GetComponentsInChildren<Collider>();
-            bullet.IgnoreOwner(playerColliders);
+                shoulderCamera.transform.position,
+                Quaternion.LookRotation(direction)
+                );
         }
         
     }
