@@ -185,4 +185,9 @@ public class PlayerController : Character
         //Here you could add code to show a game over screen, restart the level, etc.
 
     }
+
+    public override float getHealth()
+    {
+        return Health;
+    }
 }

@@ -28,5 +28,9 @@ public class Character : MonoBehaviour
         Destroy(gameObject);
     }
 
-   
+
+    public virtual float getHealth()
+    {
+        return Health;
+    }
 }

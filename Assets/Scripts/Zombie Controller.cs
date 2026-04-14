@@ -84,6 +84,7 @@ public class Zombie : Character
         if (playerHealth != null)
         {
             playerHealth.TakeDamage(damage);
+            GameManager.Instance.playerHealthUpdate(playerHealth.getHealth());
         }
 
         yield return new WaitForSeconds(attackCooldown);

@@ -1,12 +1,14 @@
 using TMPro;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class GameManager : Character
 {
     public static GameManager Instance;
     public TextMeshProUGUI scoreText;
     public int score = 0;
 
+    public TextMeshProUGUI healthText;
+    
     public GameObject zombiePrefab;
     public Transform player;
 
@@ -54,6 +56,16 @@ public class GameManager : MonoBehaviour
         if (scoreText != null)
         {
             scoreText.text = "Score: " + score;
+        }
+    }
+
+    public void playerHealthUpdate(float health)
+    {
+        
+        Debug.Log("HP: " + health);
+        if (healthText != null)
+        {
+            healthText.text = "HP: " + health;
         }
     }
 
