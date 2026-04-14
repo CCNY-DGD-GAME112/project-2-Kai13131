@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Projectile3DController : MonoBehaviour
+public class Bullet : MonoBehaviour
 {
     //My components
     public Rigidbody RB;
@@ -22,7 +22,13 @@ public class Projectile3DController : MonoBehaviour
     private void OnCollisionEnter(Collision other)
     {
         //If I hit something with a rigidbody. . .
+        Zombie zombie = other.gameObject.GetComponent<Zombie>();
+        if(zombie != null)
+        {
+            zombie.TakeDamage(30f);
+        }
         Rigidbody rb = other.gameObject.GetComponent<Rigidbody>();
+
         if (rb != null)
         {
             //I push them in the direction I'm flying with a power equal to my Knockback stat
@@ -34,12 +40,4 @@ public class Projectile3DController : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void IgnoreOwner(Collider[] owner)
-    {
-        Collider bulletCol = GetComponent<Collider>();
-        foreach (Collider col in owner)
-        {
-            Physics.IgnoreCollision(bulletCol, col);
-        }
-    }
 }   

@@ -3,13 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : Character
 {
 
     public Camera shoulderCamera;
     public GameObject arm_right;
     public Rigidbody RB;
-    public Projectile3DController ProjectilePrefab;
+
+    public Bullet bullet;
+    public float bulletDamage = 30f;
 
     public float MouseSensitivity = 3;
     public float WalkSpeed = 10;
@@ -56,7 +58,7 @@ public class PlayerController : MonoBehaviour
 
         transform.Rotate(0, mouseX, 0);
 
-        xRotation += mouseY * MouseSensitivity * Time.deltaTime;
+        xRotation += mouseY * MouseSensitivity / 2 * Time.deltaTime;
         xRotation = Mathf.Clamp(xRotation, -30, 30);
         
         cameraPivot.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
@@ -139,12 +141,23 @@ public class PlayerController : MonoBehaviour
             Vector3 direction = (targetPoint - shoulderCamera.transform.position).normalized;
 
             GameObject bulletObj = Instantiate(
-                ProjectilePrefab.gameObject,
+                bullet.gameObject,
                 shoulderCamera.transform.position,
                 Quaternion.LookRotation(direction)
                 );
         }
         
+    }
+
+    public Transform eyes;
+    public void OnDrawGizmos()
+    {
+        if (eyes != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(eyes.position, eyes.forward * 100);
+            Gizmos.DrawCube(eyes.position + eyes.forward * 100, Vector3.one * 1f);
+        }
     }
 
     public bool OnGround()
@@ -164,5 +177,12 @@ public class PlayerController : MonoBehaviour
     {
         //When I stop touching something, remove it from the list of things I'm touching
         Floors.Remove(other.gameObject);
+    }
+
+    protected override void Die()
+    {
+        Debug.Log("Player has died. Game Over.");
+        //Here you could add code to show a game over screen, restart the level, etc.
+
     }
 }
