@@ -1,5 +1,7 @@
+using NUnit.Framework;
 using TMPro;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GameManager : Character
 {
@@ -11,6 +13,8 @@ public class GameManager : Character
     
     public GameObject zombiePrefab;
     public Transform player;
+
+    public List<GameObject> zombies = new List<GameObject>();
 
     public float spawnDistance = 30f;
     public float spawnInterval = 3f;
@@ -83,17 +87,27 @@ public class GameManager : Character
         Vector3 spawnPosition = player.position + spawnDirection * spawnDistance;
 
         RaycastHit hit;
-        Vector3 rayStart = spawnPosition + Vector3.down * 50f;
+        Vector3 rayStart = spawnPosition + Vector3.down * 10f;
         if (Physics.Raycast(rayStart, Vector3.down, out hit, 100f))
         {
             spawnPosition = hit.point;
+            Debug.Log("Found Ground");
         }
 
-        GameObject z = Instantiate(zombiePrefab, spawnPosition, Quaternion.identity);
-        Zombie zombieScript = z.GetComponent<Zombie>();
-        if (zombieScript != null)
+        if(zombies.Count >= 15)
         {
-            zombieScript.player = player;
+            return;
+        }
+        else
+        {
+            GameObject z = Instantiate(zombiePrefab, spawnPosition, Quaternion.identity);
+            zombies.Add(z);
+
+            Zombie zombieScript = z.GetComponent<Zombie>();
+            if (zombieScript != null)
+            {
+                zombieScript.player = player;
+            }
         }
     }
 }

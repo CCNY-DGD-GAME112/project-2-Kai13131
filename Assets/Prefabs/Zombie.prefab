@@ -44,7 +44,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2346960627649198148}
   serializedVersion: 5
-  m_Mass: 25
+  m_Mass: 30
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -99,10 +99,11 @@ MonoBehaviour:
   Health: 100
   player: {fileID: 0}
   rb: {fileID: 1929713435874114209}
-  moveSpeed: 9.5
-  attackRange: 2
-  attackCooldown: 1.5
+  moveSpeed: 5
+  attackRange: 1
+  attackCooldown: 2
   damage: 10
+  detectionRange: 100
 --- !u!82 &-5292288927725366210
 AudioSource:
   m_ObjectHideFlags: 0
@@ -116,7 +117,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: c35db7587088c7e4c9490a5fc57e4eba, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.5
+  m_Volume: 1
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -124,8 +125,8 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
+  MinDistance: 2
+  MaxDistance: 20
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -160,7 +161,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0

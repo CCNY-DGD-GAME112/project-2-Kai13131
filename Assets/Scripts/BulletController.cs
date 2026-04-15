@@ -22,10 +22,15 @@ public class Bullet : MonoBehaviour
     private void OnCollisionEnter(Collision other)
     {
         //If I hit something with a rigidbody. . .
-        Zombie zombie = other.gameObject.GetComponent<Zombie>();
-        if(zombie != null)
+        Character zombie = other.gameObject.GetComponent<Character>();
+        if (zombie != null)
         {
             zombie.TakeDamage(30f);
+            if(zombie.Health <= 0f)
+            {
+                GameManager.Instance.AddScore(10);
+                Destroy(zombie);
+            }
         }
         Rigidbody rb = other.gameObject.GetComponent<Rigidbody>();
 

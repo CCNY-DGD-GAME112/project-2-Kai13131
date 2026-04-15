@@ -7,11 +7,16 @@ public class Zombie : Character
     public Rigidbody rb;
 
     public float moveSpeed = 2f;
-    public float attackRange = 2f;
+    public float attackRange = 1f;
     public float attackCooldown = 1.5f;
     public float damage = 10f;
 
+    public float detectionRange = 50f;
+
     private bool canAttack = true;
+
+    private Vector3 currentDirection;
+    private float blockMemory = 0f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -41,19 +46,53 @@ public class Zombie : Character
 
             float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-            if(distanceToPlayer > 30f)
+            if(distanceToPlayer > detectionRange)
             {
                 // Idle
                 yield return null;
                 continue;
             }
-            else if (distanceToPlayer <= 30f && distanceToPlayer > attackRange)
+            else if (distanceToPlayer <= detectionRange && distanceToPlayer > attackRange)
             {
                 // Move towards the player
-                Vector3 direction = (player.position - transform.position).normalized;
-                rb.MovePosition(rb.position + direction * moveSpeed * Time.deltaTime);
+                Vector3 targetDirection = (player.position - transform.position).normalized;
+                if (currentDirection == Vector3.zero)
+                {
+                    currentDirection = targetDirection;
+                }
+                currentDirection = Vector3.Slerp(currentDirection, targetDirection,Time.deltaTime * 3f);
 
-                Vector3 lookDir = new Vector3(direction.x, 0, direction.z);
+                if (isBlocked(currentDirection))
+                {
+                    blockMemory += Time.deltaTime;
+                    
+                    if(blockMemory > 0.1f)
+                    {
+                        Vector3 left = Quaternion.Euler(0, -45, 0) * currentDirection;
+                        Vector3 right = Quaternion.Euler(0, 45, 0) * currentDirection;
+
+                        if (!isBlocked(left))
+                        {
+                            currentDirection = left;
+                        }
+                        else if (!isBlocked(right))
+                        {
+                            currentDirection = right;
+                        }
+                        else
+                        {
+                            currentDirection = -currentDirection;
+                        }
+                        blockMemory = 0f;
+                    }
+                }
+                else
+                {
+                    blockMemory = 0f;
+                }
+                rb.MovePosition(rb.position + currentDirection * moveSpeed * Time.deltaTime);
+
+                Vector3 lookDir = new Vector3(currentDirection.x, 0, currentDirection.z);
                 if (lookDir != Vector3.zero)
                 {
                     transform.rotation = Quaternion.Slerp(
@@ -65,11 +104,12 @@ public class Zombie : Character
             else
             {
                 //Attack
-                if (canAttack)
+                if (!canAttack)
                 {
-                    StartCoroutine(Attack());
-                    canAttack = false;
+                    yield return null;
+                    continue;
                 }
+                StartCoroutine(Attack());
             }
             yield return null;
         }
@@ -94,7 +134,7 @@ public class Zombie : Character
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, 30f);
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
 
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
@@ -103,6 +143,13 @@ public class Zombie : Character
     protected override void Die()
     {
         base.Die();
-        GameManager.Instance.AddScore(10);
+        GameManager.Instance.zombies.Remove(gameObject);
+    }
+
+    bool isBlocked(Vector3 direction)
+    {
+        
+        Vector3 origin = transform.position + Vector3.up * 0.5f;
+        return Physics.SphereCast(origin, 0.3f, direction, out RaycastHit hit, 1.2f);
     }
 }
