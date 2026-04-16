@@ -22,7 +22,7 @@ public class Bullet : MonoBehaviour
     private void OnCollisionEnter(Collision other)
     {
         //If I hit something with a rigidbody. . .
-        Character zombie = other.gameObject.GetComponent<Character>();
+        Zombie zombie = other.gameObject.GetComponent<Zombie>();
         if (zombie != null)
         {
             zombie.TakeDamage(30f);
@@ -32,12 +32,13 @@ public class Bullet : MonoBehaviour
                 Destroy(zombie);
             }
         }
-        Rigidbody rb = other.gameObject.GetComponent<Rigidbody>();
+        
 
-        if (rb != null)
+        if (zombie != null)
         {
             //I push them in the direction I'm flying with a power equal to my Knockback stat
-            rb.AddForce(RB.linearVelocity.normalized * Knockback, ForceMode.Impulse);
+            Vector3 dir = (zombie.transform.position - transform.position).normalized;
+            zombie.ApplyKnockback(RB.linearVelocity.normalized * Knockback);
         }
         
         //If I hit anything, I despawn

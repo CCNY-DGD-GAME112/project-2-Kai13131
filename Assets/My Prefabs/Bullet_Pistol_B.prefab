@@ -156,7 +156,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
   RB: {fileID: 8062996359555255466}
   Speed: 60
-  Knockback: 10
+  Knockback: 15
 --- !u!1 &6144363844457194292
 GameObject:
   m_ObjectHideFlags: 0
