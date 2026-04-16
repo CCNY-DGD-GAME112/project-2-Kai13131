@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-
 public class Zombie : Character
 {
     public Transform player;
@@ -19,26 +18,10 @@ public class Zombie : Character
     private Vector3 currentDirection;
     private float blockMemory = 0f;
 
-    Vector3 knockbackVelocity;
-
-    public Renderer[] rends;
-    public Color[] originalColors;
-
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-
-        rends = GetComponentsInChildren<Renderer>();
-        originalColors = new Color[rends.Length];
-        for (int i = 0; i < rends.Length; i++)
-        {
-            if(rends[i] != null)
-            {
-                rends[i].material = new Material(rends[i].material);
-            }
-                originalColors[i] = rends[i].material.GetColor("_BaseColor");
-        }
 
         StartCoroutine(AIBehavior());
     }
@@ -69,56 +52,45 @@ public class Zombie : Character
                 yield return null;
                 continue;
             }
-            else if (distanceToPlayer > attackRange)
+            else if (distanceToPlayer <= detectionRange && distanceToPlayer > attackRange)
             {
                 // Move towards the player
                 Vector3 targetDirection = (player.position - transform.position).normalized;
-
-                if (distanceToPlayer < attackRange * 2f)
+                if (currentDirection == Vector3.zero)
                 {
                     currentDirection = targetDirection;
                 }
-                else
+                currentDirection = Vector3.Slerp(currentDirection, targetDirection,Time.deltaTime * 3f);
+
+                if (isBlocked(currentDirection))
                 {
-                    if(currentDirection == Vector3.zero)
+                    blockMemory += Time.deltaTime;
+                    
+                    if(blockMemory > 0.1f)
                     {
-                        currentDirection = targetDirection;
-                    }
-                    currentDirection = Vector3.Slerp(currentDirection, targetDirection, Time.deltaTime * 3f);
+                        Vector3 left = Quaternion.Euler(0, -45, 0) * currentDirection;
+                        Vector3 right = Quaternion.Euler(0, 45, 0) * currentDirection;
 
-                    if (isBlocked(currentDirection))
-                    {
-                        blockMemory += Time.deltaTime;
-
-                        if (blockMemory > 0.1f)
+                        if (!isBlocked(left))
                         {
-                            Vector3 left = Quaternion.Euler(0, -45, 0) * currentDirection;
-                            Vector3 right = Quaternion.Euler(0, 45, 0) * currentDirection;
-
-                            if (!isBlocked(left))
-                            {
-                                currentDirection = left;
-                            }
-                            else if (!isBlocked(right))
-                            {
-                                currentDirection = right;
-                            }
-                            else
-                            {
-                                currentDirection = -currentDirection;
-                            }
-                            blockMemory = 0f;
+                            currentDirection = left;
                         }
-                    }
-                    else
-                    {
+                        else if (!isBlocked(right))
+                        {
+                            currentDirection = right;
+                        }
+                        else
+                        {
+                            currentDirection = -currentDirection;
+                        }
                         blockMemory = 0f;
                     }
                 }
-
-                Vector3 move = currentDirection * moveSpeed + knockbackVelocity;
-                rb.MovePosition(rb.position + move * Time.deltaTime);
-                knockbackVelocity = Vector3.Lerp(knockbackVelocity, Vector3.zero, Time.deltaTime * 5f);
+                else
+                {
+                    blockMemory = 0f;
+                }
+                rb.MovePosition(rb.position + currentDirection * moveSpeed * Time.deltaTime);
 
                 Vector3 lookDir = new Vector3(currentDirection.x, 0, currentDirection.z);
                 if (lookDir != Vector3.zero)
@@ -137,7 +109,6 @@ public class Zombie : Character
                     yield return null;
                     continue;
                 }
-                currentDirection = Vector3.zero;
                 StartCoroutine(Attack());
             }
             yield return null;
@@ -160,34 +131,6 @@ public class Zombie : Character
         canAttack = true;
     }
 
-    public override void TakeDamage(float damage)
-    {
-        base.TakeDamage(damage);
-        StartCoroutine(HitFlash());
-    }
-
-    IEnumerator HitFlash()
-    {
-        if (rends == null || rends.Length == 0) yield break;
-
-        for(int i = 0; i < rends.Length; i++)
-        {
-            if(rends[i] != null)
-            {
-                rends[i].material.SetColor("_BaseColor", Color.red);
-            }
-        }
-        yield return new WaitForSeconds(0.1f);
-
-        for(int i = 0; i < rends.Length; i++)
-        {
-            if (rends[i] != null)
-            {
-                rends[i].material.SetColor("_BaseColor", originalColors[i]);
-            }
-        }
-    }
-
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
@@ -207,22 +150,6 @@ public class Zombie : Character
     {
         
         Vector3 origin = transform.position + Vector3.up * 0.5f;
-        if(Physics.SphereCast(origin, 0.3f, direction, out RaycastHit hit, 1.2f))
-        {
-            if (hit.transform == player)
-            {
-                return false;
-            }
-            return true;
-        }
-        return false;
+        return Physics.SphereCast(origin, 0.3f, direction, out RaycastHit hit, 1.2f);
     }
-
-    public void ApplyKnockback(Vector3 force)
-    {
-        knockbackVelocity += force;
-    }
-
-
-
 }
