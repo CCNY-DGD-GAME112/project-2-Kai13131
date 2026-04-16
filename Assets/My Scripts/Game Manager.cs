@@ -45,6 +45,7 @@ public class GameManager : Character
     }
 
     // Update is called once per frame
+    //test
     void Update()
     {
 
