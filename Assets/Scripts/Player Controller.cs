@@ -43,7 +43,7 @@ public class PlayerController : Character
     {
         playerMove();
         cameraMove();
-        semi_automatic_Firing();
+        Shoot();
                       
     }
 
@@ -118,37 +118,35 @@ public class PlayerController : Character
         }
     }
 
-    void semi_automatic_Firing()
+    void Shoot()
     {
         
-        if (Input.GetMouseButton(1))
+        if (Input.GetMouseButtonDown(0))
         {
-            if (Input.GetMouseButtonDown(0))
+            audioSource.PlayOneShot(ShootSound);
+
+            Ray ray = new Ray(shoulderCamera.transform.position, shoulderCamera.transform.forward);
+            RaycastHit hit;
+            Vector3 targetPoint;
+
+            if (Physics.Raycast(ray, out hit, 100f))
             {
-                audioSource.PlayOneShot(ShootSound);
-
-                Ray ray = new Ray(shoulderCamera.transform.position, shoulderCamera.transform.forward);
-                RaycastHit hit;
-                Vector3 targetPoint;
-
-                if (Physics.Raycast(ray, out hit, 100f))
-                {
-                    targetPoint = hit.point;
-                }
-                else
-                {
-                    targetPoint = ray.GetPoint(100f);
-                }
-
-                Vector3 direction = (targetPoint - shoulderCamera.transform.position).normalized;
-
-                GameObject bulletObj = Instantiate(
-                    bullet.gameObject,
-                    shoulderCamera.transform.position,
-                    Quaternion.LookRotation(direction)
-                    );
+                targetPoint = hit.point;
             }
+            else
+            {
+                targetPoint = ray.GetPoint(100f);
+            }
+
+            Vector3 direction = (targetPoint - shoulderCamera.transform.position).normalized;
+
+            GameObject bulletObj = Instantiate(
+                bullet.gameObject,
+                shoulderCamera.transform.position,
+                Quaternion.LookRotation(direction)
+                );
         }
+        
     }
 
     public Transform eyes;
@@ -185,7 +183,7 @@ public class PlayerController : Character
     {
         Debug.Log("Player has died. Game Over.");
         //Here you could add code to show a game over screen, restart the level, etc.
-        GameManager.Instance.GameOver();
+
     }
 
     public override float getHealth()
