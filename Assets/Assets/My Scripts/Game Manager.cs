@@ -27,11 +27,13 @@ public class GameManager : Character
     public GameObject winUI;
     public GameObject loseUI;
     public GameObject MenuScreen;
-    public TextMeshProUGUI finalPointText;
+    public TextMeshProUGUI WinfinalPointText;
+    public TextMeshProUGUI LoseFinalPoints;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        
         if (player == null)
         {
             GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -40,6 +42,7 @@ public class GameManager : Character
                 player = p;
             }
         }
+
 
         InvokeRepeating("SpawnZombie", 1f, spawnInterval);
     }
@@ -81,8 +84,8 @@ public class GameManager : Character
         if(winUI != null)
         {
             winUI.SetActive(true);
-            if(finalPointText != null)
-                finalPointText.text = score.ToString() + " Points";
+            if(WinfinalPointText != null)
+                WinfinalPointText.text = score.ToString() + " Points";
         }
 
         CancelInvoke("SpawnZombie");
@@ -110,6 +113,9 @@ public class GameManager : Character
         if (loseUI != null)
         {
             loseUI.SetActive(true);
+            if (LoseFinalPoints != null)
+                LoseFinalPoints.text = score.ToString() + " Points";
+
         }
         Time.timeScale = 0f;
 
