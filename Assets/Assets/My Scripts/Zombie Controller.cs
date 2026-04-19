@@ -24,12 +24,15 @@ public class Zombie : Character
     public Renderer[] rends;
     public Color[] originalColors;
 
+    Animator animator;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         rb = GetComponent<Rigidbody>();
 
         rends = GetComponentsInChildren<Renderer>();
+        animator = GetComponent<Animator>();
+
         originalColors = new Color[rends.Length];
         for (int i = 0; i < rends.Length; i++)
         {
@@ -118,6 +121,10 @@ public class Zombie : Character
 
                 Vector3 move = currentDirection * moveSpeed + knockbackVelocity;
                 rb.MovePosition(rb.position + move * Time.deltaTime);
+
+                animator.SetFloat("speed", move.magnitude);
+                animator.SetBool("holdingHands", true);
+
                 knockbackVelocity = Vector3.Lerp(knockbackVelocity, Vector3.zero, Time.deltaTime * 5f);
 
                 Vector3 lookDir = new Vector3(currentDirection.x, 0, currentDirection.z);

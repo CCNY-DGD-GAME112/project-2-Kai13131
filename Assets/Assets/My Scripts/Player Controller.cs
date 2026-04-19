@@ -16,6 +16,7 @@ public class PlayerController : Character
     public float MouseSensitivity = 3;
     public float WalkSpeed = 10;
     public float JumpPower = 7;
+    Vector3 move;
 
     public List<GameObject> Floors;
 
@@ -30,10 +31,15 @@ public class PlayerController : Character
     public AudioSource audioSource;
     public AudioClip ShootSound;
 
+    Animator animator;
+    public float semi_automatic_FiringShootCooldown = 0.5f; // Time between shots
+    float nextFireTime = 0f; // Time when the player can shoot again
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         shoulderCamera.transform.localRotation = Quaternion.identity;
+        animator = GetComponent<Animator>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -43,9 +49,9 @@ public class PlayerController : Character
     {
         playerMove();
         cameraMove();
-        semi_automatic_Firing();
-                      
+        semi_automatic_Firing();                
     }
+
 
     void cameraMove()
     {
@@ -93,19 +99,15 @@ public class PlayerController : Character
         if (WalkSpeed > 0)
         {
             //My temp velocity variable
-            Vector3 move = Vector3.zero;
+
+            
+            float x = Input.GetAxis("Horizontal");
+            float z = Input.GetAxis("Vertical");
 
             //transform.forward/right are relative to the direction my body is facing
-            if (Input.GetKey(KeyCode.W))
-                move += transform.forward;
-            if (Input.GetKey(KeyCode.S))
-                move -= transform.forward;
-            if (Input.GetKey(KeyCode.A))
-                move -= transform.right;
-            if (Input.GetKey(KeyCode.D))
-                move += transform.right;
+            Vector3 move = transform.forward * z + transform.right * x;
             //I reduce my total movement to 1 and then multiply it by my speed
-            move = move.normalized * WalkSpeed;
+            move = move * WalkSpeed;
 
             //If I hit jump and am on the ground, I jump
             if (JumpPower > 0 && Input.GetKeyDown(KeyCode.Space) && OnGround())
@@ -115,6 +117,9 @@ public class PlayerController : Character
 
             //Plug my calculated velocity into the rigidbody
             RB.linearVelocity = move;
+
+            float speed = new Vector2(x,z).magnitude;
+            animator.SetFloat("speed", speed);
         }
     }
 
@@ -123,8 +128,14 @@ public class PlayerController : Character
         
         if (Input.GetMouseButton(1))
         {
-            if (Input.GetMouseButtonDown(0))
+
+            animator.SetBool("isAiming", true);
+            if (Input.GetMouseButtonDown(0) && Time.time >= nextFireTime)
             {
+                nextFireTime = Time.time + semi_automatic_FiringShootCooldown;
+
+                animator.SetTrigger("shoot");
+
                 audioSource.PlayOneShot(ShootSound);
 
                 Ray ray = new Ray(shoulderCamera.transform.position, shoulderCamera.transform.forward);
@@ -148,6 +159,14 @@ public class PlayerController : Character
                     Quaternion.LookRotation(direction)
                     );
             }
+            else
+            {
+                 animator.SetBool("shoot", false);
+            }
+        }
+        else
+        {
+            animator.SetBool("isAiming", false);
         }
     }
 
@@ -171,14 +190,21 @@ public class PlayerController : Character
     {
         //If I touch something and it's not already in my list of things I'm touching. . .
         //Add it to the list
-        if (!Floors.Contains(other.gameObject))
-            Floors.Add(other.gameObject);
+        if (other.gameObject.CompareTag("Ground"))
+        {
+            if (!Floors.Contains(other.gameObject))
+                Floors.Add(other.gameObject);
+        }
     }
 
     private void OnCollisionExit(Collision other)
     {
         //When I stop touching something, remove it from the list of things I'm touching
-        Floors.Remove(other.gameObject);
+        if (other.gameObject.CompareTag("Ground"))
+        {
+            Floors.Remove(other.gameObject);
+
+        }
     }
 
     protected override void Die()
@@ -188,8 +214,11 @@ public class PlayerController : Character
         GameManager.Instance.GameOver();
     }
 
-    public override float getHealth()
+    public void Heal(float amount)
     {
-        return Health;
+        Health += amount;
+        if(Health > 100f)
+            Health = 100f;
+        GameManager.Instance.playerHealthUpdate(Health);
     }
 }

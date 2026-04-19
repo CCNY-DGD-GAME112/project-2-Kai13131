@@ -25,7 +25,8 @@ public class Bullet : MonoBehaviour
         Zombie zombie = other.gameObject.GetComponent<Zombie>();
         if (zombie != null)
         {
-            zombie.TakeDamage(30f);
+            PlayerController player = GameManager.Instance.player.GetComponent<PlayerController>();
+            zombie.TakeDamage(player.bulletDamage);
             if(zombie.Health <= 0f)
             {
                 GameManager.Instance.AddScore(10);
@@ -38,7 +39,7 @@ public class Bullet : MonoBehaviour
         {
             //I push them in the direction I'm flying with a power equal to my Knockback stat
             Vector3 dir = (zombie.transform.position - transform.position).normalized;
-            zombie.ApplyKnockback(RB.linearVelocity.normalized * Knockback);
+            zombie.ApplyKnockback(dir * Knockback);
         }
         
         //If I hit anything, I despawn

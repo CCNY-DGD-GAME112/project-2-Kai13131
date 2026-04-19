@@ -26,7 +26,7 @@ public class GameManager : Character
 
     public GameObject winUI;
     public GameObject loseUI;
-    public GameObject MenuScreen;
+
     public TextMeshProUGUI WinfinalPointText;
     public TextMeshProUGUI LoseFinalPoints;
 
@@ -124,23 +124,7 @@ public class GameManager : Character
 
     }
 
-    public void StartButton()
-    {
-        Debug.Log("Start pressed");
 
-        if (MenuScreen == null)
-        {
-            Debug.LogError("MenuScreen is NOT assigned!");
-            return;
-        }
-
-        MenuScreen.SetActive(false);
-        Time.timeScale = 1f;
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = false;
-
-    }
     public void RestartButton()
     {
         Time.timeScale = 1f;
