@@ -7,6 +7,8 @@ TagManager:
   - Bullet
   - Gun
   - Ground
+  - pickupAK47
+  - Obstacle
   layers:
   - Default
   - TransparentFX

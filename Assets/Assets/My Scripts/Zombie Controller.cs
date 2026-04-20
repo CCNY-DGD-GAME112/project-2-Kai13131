@@ -1,5 +1,6 @@
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
+using UnityEngine.Audio;
 
 
 public class Zombie : Character
@@ -25,6 +26,9 @@ public class Zombie : Character
     public Color[] originalColors;
 
     Animator animator;
+
+    public AudioSource audioSource;
+    public AudioClip ZombieHurtSound;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -54,6 +58,8 @@ public class Zombie : Character
             Die();
         }
     }
+
+
     IEnumerator AIBehavior()
     {
         while (true)
@@ -170,11 +176,16 @@ public class Zombie : Character
     public override void TakeDamage(float damage)
     {
         base.TakeDamage(damage);
-        StartCoroutine(HitFlash());
+        StartCoroutine(HitFlash()); 
+
+
     }
 
     IEnumerator HitFlash()
     {
+        Debug.Log("Playing zombie hurt sound");
+        audioSource.PlayOneShot(ZombieHurtSound);
+
         if (rends == null || rends.Length == 0) yield break;
 
         for(int i = 0; i < rends.Length; i++)

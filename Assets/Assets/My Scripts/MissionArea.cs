@@ -14,6 +14,10 @@ public class MissionArea : MonoBehaviour
     public string missionName = "Mission Area";
 
     public GameObject canvas;
+
+    public AudioSource audioSource;
+    public AudioClip missionCompletedSound;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -94,6 +98,7 @@ public class MissionArea : MonoBehaviour
 
         completed = true;
         Debug.Log(missionName + " completed!");
+        audioSource.PlayOneShot(missionCompletedSound);
         GameManager.Instance.MissionCompleted();
     }
 }

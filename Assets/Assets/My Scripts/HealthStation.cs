@@ -11,16 +11,15 @@ public class HealthStation : MonoBehaviour
 
     public float rotateSpeed = 30f;
 
+    public AudioSource audioSource;
+    public AudioClip healSound;
+
     void Start()
     {
         col = GetComponent<Collider>();
         rends = GetComponentsInChildren<Renderer>();
 
         // make unique materials so color change only affects this object
-        foreach (Renderer r in rends)
-        {
-            r.material = new Material(r.material);
-        }
     }
 
     void Update()
@@ -37,6 +36,7 @@ public class HealthStation : MonoBehaviour
             if (player != null)
             {
                 player.Heal(addHealthAmount);
+                audioSource.PlayOneShot(healSound);
             }
 
             StartCoroutine(RespawnRoutine());

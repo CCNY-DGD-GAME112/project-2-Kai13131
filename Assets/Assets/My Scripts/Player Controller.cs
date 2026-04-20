@@ -10,7 +10,19 @@ public class PlayerController : Character
     public GameObject arm_right;
     public Rigidbody RB;
 
-    public Bullet bullet;
+    public GameObject pistol;
+    public GameObject ak47;
+
+    public Transform pistolFirePoint;
+    public Transform ak47FirePoint;
+
+    private bool hasAK47 = false;
+    private bool usingAK47 = false;
+    private bool usingPistol = false;
+
+    public Bullet pistolBullet;
+    public Bullet ak47Bullet;
+
     public float bulletDamage = 30f;
 
     public float MouseSensitivity = 3;
@@ -29,10 +41,14 @@ public class PlayerController : Character
     float xRotation = 0f;
 
     public AudioSource audioSource;
-    public AudioClip ShootSound;
+    public AudioClip pistolSound;
+    public AudioClip ak47Sound;
+
+    public AudioClip playerHurtSound;
 
     Animator animator;
     public float semi_automatic_FiringShootCooldown = 0.5f; // Time between shots
+    public float automatic_FiringShootCooldown = 0.35f; // Time between shots for automatic weapons
     float nextFireTime = 0f; // Time when the player can shoot again
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -49,9 +65,62 @@ public class PlayerController : Character
     {
         playerMove();
         cameraMove();
-        semi_automatic_Firing();                
+        weaponSwitch();
+        Firing(); 
+    }
+    
+    public override void TakeDamage(float damage)
+    {
+        base.TakeDamage(damage);
+        if(audioSource != null && playerHurtSound != null)
+        {
+            audioSource.PlayOneShot(playerHurtSound);
+        }
     }
 
+    void weaponSwitch()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            EquipPistol();
+            usingPistol = true;
+            usingAK47 = false;
+        }
+        if (hasAK47)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                EquipAK47();
+                usingAK47 = true;
+                usingPistol = false;
+            }
+        }
+
+    }
+
+    void EquipPistol()
+    {
+        pistol.SetActive(true);         
+        ak47.SetActive(false);
+        nextFireTime = 0f; // Reset fire cooldown when switching weapons
+    }
+
+    void EquipAK47()
+    {
+        pistol.SetActive(false);        
+        ak47.SetActive(true);
+        nextFireTime = 0f; // Reset fire cooldown when switching weapons
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("pickupAK47"))
+        {
+            Destroy(other.gameObject);
+            hasAK47 = true;
+            EquipAK47();
+        }
+    }
 
     void cameraMove()
     {
@@ -93,7 +162,6 @@ public class PlayerController : Character
             );
     }
 
-
     void playerMove()
     {
         if (WalkSpeed > 0)
@@ -123,50 +191,98 @@ public class PlayerController : Character
         }
     }
 
-    void semi_automatic_Firing()
+    void Firing()
     {
-        
-        if (Input.GetMouseButton(1))
+        if (pistol.activeSelf)
         {
-
-            animator.SetBool("isAiming", true);
-            if (Input.GetMouseButtonDown(0) && Time.time >= nextFireTime)
+            if (Input.GetMouseButton(1))
             {
-                nextFireTime = Time.time + semi_automatic_FiringShootCooldown;
 
-                animator.SetTrigger("shoot");
-
-                audioSource.PlayOneShot(ShootSound);
-
-                Ray ray = new Ray(shoulderCamera.transform.position, shoulderCamera.transform.forward);
-                RaycastHit hit;
-                Vector3 targetPoint;
-
-                if (Physics.Raycast(ray, out hit, 100f))
+                animator.SetBool("isAiming", true);
+                if (Input.GetMouseButtonDown(0) && Time.time >= nextFireTime)
                 {
-                    targetPoint = hit.point;
+                    nextFireTime = Time.time + semi_automatic_FiringShootCooldown;
+
+                    animator.SetTrigger("shoot");
+
+                    audioSource.PlayOneShot(pistolSound);
+
+                    Ray ray = new Ray(shoulderCamera.transform.position, shoulderCamera.transform.forward);
+                    RaycastHit hit;
+                    Vector3 targetPoint;
+
+                    if (Physics.Raycast(ray, out hit, 100f))
+                    {
+                        targetPoint = hit.point;
+                    }
+                    else
+                    {
+                        targetPoint = ray.GetPoint(100f);
+                    }
+
+                    Transform currentFirePoint = pistolFirePoint;
+
+                    Vector3 direction = (targetPoint - shoulderCamera.transform.position).normalized;
+
+                    GameObject bulletObj = Instantiate(
+                        pistolBullet.gameObject,
+                        currentFirePoint.position,
+                        Quaternion.LookRotation(direction)
+                        );
                 }
                 else
                 {
-                    targetPoint = ray.GetPoint(100f);
+                    animator.SetBool("shoot", false);
                 }
-
-                Vector3 direction = (targetPoint - shoulderCamera.transform.position).normalized;
-
-                GameObject bulletObj = Instantiate(
-                    bullet.gameObject,
-                    shoulderCamera.transform.position,
-                    Quaternion.LookRotation(direction)
-                    );
             }
             else
             {
-                 animator.SetBool("shoot", false);
+                animator.SetBool("isAiming", false);
             }
         }
-        else
+        if (ak47.activeSelf)
         {
-            animator.SetBool("isAiming", false);
+            if (Input.GetMouseButton(1))
+            {
+                animator.SetBool("isAiming", true);
+                if (Input.GetMouseButton(0) && Time.time >= nextFireTime)
+                {
+                    nextFireTime = Time.time + automatic_FiringShootCooldown;
+                    audioSource.PlayOneShot(ak47Sound);
+                    animator.SetTrigger("shoot");
+
+                    Ray ray = new Ray(shoulderCamera.transform.position, shoulderCamera.transform.forward);
+                    RaycastHit hit;
+                    Vector3 targetPoint;
+
+                    if (Physics.Raycast(ray, out hit, 100f))
+                    {
+                        targetPoint = hit.point;
+                    }
+                    else
+                    {
+                        targetPoint = ray.GetPoint(100f);
+                    }
+
+                    Transform currentFirePoint = ak47FirePoint;
+
+                    Vector3 direction = (targetPoint - shoulderCamera.transform.position).normalized;
+
+                    GameObject bulletObj = Instantiate(
+                        ak47Bullet.gameObject,
+                        currentFirePoint.position,
+                        Quaternion.LookRotation(direction)
+                        );
+                }
+                else
+                {
+                    animator.SetBool("shoot", false);
+                }
+            }
+            else
+            {
+                animator.SetBool("isAiming", false);
+            }
         }
     }
 
@@ -190,7 +306,7 @@ public class PlayerController : Character
     {
         //If I touch something and it's not already in my list of things I'm touching. . .
         //Add it to the list
-        if (other.gameObject.CompareTag("Ground"))
+        if (other.gameObject.CompareTag("Ground") || other.gameObject.CompareTag("Obstacle"))
         {
             if (!Floors.Contains(other.gameObject))
                 Floors.Add(other.gameObject);
@@ -200,7 +316,7 @@ public class PlayerController : Character
     private void OnCollisionExit(Collision other)
     {
         //When I stop touching something, remove it from the list of things I'm touching
-        if (other.gameObject.CompareTag("Ground"))
+        if (other.gameObject.CompareTag("Ground") || other.gameObject.CompareTag("Obstacle"))
         {
             Floors.Remove(other.gameObject);
 

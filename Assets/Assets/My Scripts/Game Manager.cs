@@ -30,6 +30,10 @@ public class GameManager : Character
     public TextMeshProUGUI WinfinalPointText;
     public TextMeshProUGUI LoseFinalPoints;
 
+    public AudioSource audioSource;
+    public AudioClip winSound;
+    public AudioClip loseSound;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -84,7 +88,9 @@ public class GameManager : Character
         if(winUI != null)
         {
             winUI.SetActive(true);
-            if(WinfinalPointText != null)
+
+            audioSource.PlayOneShot(winSound);
+            if (WinfinalPointText != null)
                 WinfinalPointText.text = score.ToString() + " Points";
         }
 
@@ -113,6 +119,8 @@ public class GameManager : Character
         if (loseUI != null)
         {
             loseUI.SetActive(true);
+            audioSource.PlayOneShot(loseSound);
+            
             if (LoseFinalPoints != null)
                 LoseFinalPoints.text = score.ToString() + " Points";
 

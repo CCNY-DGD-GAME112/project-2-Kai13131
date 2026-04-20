@@ -3,9 +3,11 @@ using UnityEngine;
 public class Character : MonoBehaviour
 {
     public float Health = 100f;
+
     public virtual void TakeDamage(float damage)
     {
         Health -= damage;
+
         if (Health <= 0)
         {
             Die();
